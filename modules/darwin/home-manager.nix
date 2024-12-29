@@ -26,7 +26,7 @@ in
   homebrew = {
     enable = true;
     casks = pkgs.callPackage ./casks.nix {};
-    # onActivation.cleanup = "uninstall";
+    onActivation.cleanup = "uninstall";
 
     # These app IDs are from using the mas CLI app
     # mas = mac app store
@@ -72,12 +72,7 @@ in
     { path = "/System/Applications/Messages.app/"; }
     { path = "/System/Applications/Facetime.app/"; }
     { path = "${pkgs.alacritty}/Applications/Alacritty.app/"; }
-    { path = "/System/Applications/Music.app/"; }
-    { path = "/System/Applications/News.app/"; }
-    { path = "/System/Applications/Photos.app/"; }
     { path = "/System/Applications/Photo Booth.app/"; }
-    { path = "/System/Applications/TV.app/"; }
-    { path = "/System/Applications/Home.app/"; }
     {
       path = toString myEmacsLauncher;
       section = "others";

@@ -10,10 +10,9 @@ _:
   "notion"
   "slack"
   "telegram"
-  "zoom"
 
   # Utility Tools
-  "syncthing"
+  "rectangle"
 
   # Entertainment Tools
 
@@ -21,5 +20,5 @@ _:
   "raycast"
 
   # Browsers
-  "google-chrome"
+  "arc"
 ]

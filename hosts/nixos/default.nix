@@ -175,6 +175,7 @@ let user = "bryan";
         opacity-rule = [
           "100:class_g = 'i3lock'"
           "60:class_g = 'Dunst'"
+          # TODO: Should i remove this alacritty config since i don't use alacritty anymore?
           "100:class_g = 'Alacritty' && focused"
           "90:class_g = 'Alacritty' && !focused"
         ];

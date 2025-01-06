@@ -272,6 +272,9 @@ let name = "bryanprimus";
             "/Users/${user}/.ssh/id_github"
           )
         ];
+        extraOptions = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+          AddKeysToAgent = "yes";
+        };
       };
     };
   };

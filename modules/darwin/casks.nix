@@ -22,4 +22,8 @@ _:
 
   # Browsers
   "arc"
+
+  # RN Development
+  "zulu@17"
+  "android-studio"
 ]

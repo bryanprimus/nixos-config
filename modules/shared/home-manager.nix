@@ -217,6 +217,20 @@ let name = "bryanprimus";
           AddKeysToAgent = "yes";
         };
       };
+      "git.finetiks.io" = {
+        identitiesOnly = true;
+        identityFile = [
+          (lib.mkIf pkgs.stdenv.hostPlatform.isLinux
+            "/home/${user}/.ssh/id_github"
+          )
+          (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin
+            "/Users/${user}/.ssh/id_github"
+          )
+        ];
+        extraOptions = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
+          AddKeysToAgent = "yes";
+        };
+      };
     };
   };
 

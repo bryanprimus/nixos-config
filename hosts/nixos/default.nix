@@ -251,22 +251,12 @@ let user = "bryan";
     ledger.enable = true;
   };
 
-
-  # Add docker daemon
-  virtualisation = {
-    docker = {
-      enable = true;
-      logDriver = "json-file";
-    };
-  };
-
   # It's me, it's you, it's everyone
   users.users = {
     ${user} = {
       isNormalUser = true;
       extraGroups = [
         "wheel" # Enable ‘sudo’ for the user.
-        "docker"
       ];
       shell = pkgs.zsh;
       openssh.authorizedKeys.keys = keys;

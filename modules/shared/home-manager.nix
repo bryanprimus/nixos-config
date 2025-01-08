@@ -45,6 +45,9 @@ let name = "bryanprimus";
       export ANDROID_HOME=$HOME/Library/Android/sdk
       export PATH=$PATH:$ANDROID_HOME/emulator
       export PATH=$PATH:$ANDROID_HOME/platform-tools
+      export LANG=en_US.UTF-8
+      export LC_ALL=en_US.UTF-8
+
 
       e() {
           emacsclient -t "$@"
@@ -60,6 +63,17 @@ let name = "bryanprimus";
 
       # Always color ls and group directories
       alias ls='ls --color=auto'
+    '';
+  };
+
+  # Fastlane for some reason read bash profile instead of zsh
+  # Therefore we source zshrc in here
+  bash = {
+    enable = true;
+    profileExtra = ''
+      if [ -f ~/.zshrc ]; then
+          source ~/.zshrc
+      fi
     '';
   };
 

@@ -54,4 +54,8 @@ with pkgs; [
   # Python packages
   python3
   virtualenv
+
+  # RN development
+  gitlab-runner
+  ruby
 ]

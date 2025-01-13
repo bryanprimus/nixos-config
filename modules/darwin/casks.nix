@@ -10,6 +10,7 @@ _:
   "notion"
   "slack"
   "telegram"
+  "whatsapp"
 
   # Utility Tools
   "rectangle"

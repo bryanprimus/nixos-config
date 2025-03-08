@@ -20,6 +20,9 @@
       url = "github:homebrew/homebrew-bundle";
       flake = false;
     };
+
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -31,12 +34,20 @@
       homebrew-core,
       homebrew-cask,
       homebrew-bundle,
+      home-manager,
       ...
     }:
     let
+      user = "bryan";
       configuration =
         { pkgs, ... }:
         {
+          # Add user configuration part of home-manager ?
+          users.users.${user} = {
+            name = user;
+            home = "/Users/${user}";
+          };
+
           # List packages installed in system profile. To search by name, run:
           # $ nix-env -qaP | grep wget
           environment.systemPackages = [
@@ -87,7 +98,7 @@
               enable = true;
 
               # User owning the Homebrew prefix
-              user = "bryan";
+              user = user;
 
               # Optional: Declarative tap management
               taps = {
@@ -99,6 +110,31 @@
               # Optional: Enable fully-declarative tap management
               # With mutableTaps disabled, taps can no longer be added imperatively with `brew tap`.
               mutableTaps = false;
+            };
+          }
+          home-manager.darwinModules.home-manager
+          {
+            # Enable home-manager
+            home-manager = {
+              useGlobalPkgs = true;
+              users.${user} =
+                { pkgs, ... }:
+                {
+                  home = {
+                    enableNixpkgsReleaseCheck = false;
+                    stateVersion = "23.11";
+                  };
+
+                  programs.git = {
+                    enable = true;
+                    userName = "bryanprimus";
+                    userEmail = "bryantobing0@gmail.com";
+                  };
+
+                  # Marked broken Oct 20, 2022 check later to remove this
+                  # https://github.com/nix-community/home-manager/issues/3344
+                  manual.manpages.enable = false;
+                };
             };
           }
         ];

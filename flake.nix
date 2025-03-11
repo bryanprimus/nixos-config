@@ -39,6 +39,7 @@
     }:
     let
       user = "bryan";
+      system = "aarch64-darwin";
       configuration =
         { pkgs, ... }:
         {
@@ -50,11 +51,12 @@
 
           # List packages installed in system profile. To search by name, run:
           # $ nix-env -qaP | grep wget
-          environment.systemPackages = [
-            pkgs.vim
-            pkgs.nodejs
-            pkgs.nixfmt-rfc-style
-            pkgs.bun
+
+          environment.systemPackages = with pkgs; [
+            vim
+            nodejs
+            nixfmt-rfc-style
+            bun
           ];
 
           # Necessary for using flakes on this system.
@@ -71,11 +73,12 @@
           system.stateVersion = 6;
 
           # The platform the configuration will be used on.
-          nixpkgs.hostPlatform = "aarch64-darwin";
+          nixpkgs.hostPlatform = system;
 
           homebrew = {
             enable = true;
             casks = [
+              "rectangle"
               "whatsapp"
               "cleanshot"
               "ghostty"
@@ -123,6 +126,22 @@
                   home = {
                     enableNixpkgsReleaseCheck = false;
                     stateVersion = "23.11";
+
+                  };
+
+                  # SSH configuration
+                  programs.ssh = {
+                    enable = true;
+                    matchBlocks = {
+                      "github.com" = {
+                        identityFile = "~/.ssh/id_ed25519";
+                        identitiesOnly = true;
+                        extraOptions = {
+                          AddKeysToAgent = "yes";
+                          UseKeychain = "yes";
+                        };
+                      };
+                    };
                   };
 
                   programs.git = {

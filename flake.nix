@@ -57,6 +57,7 @@
             nodejs
             nixfmt-rfc-style
             bun
+            starship
           ];
 
           # Necessary for using flakes on this system.
@@ -135,6 +136,20 @@
                     enableCompletion = true;
                     autosuggestion.enable = true;
                     syntaxHighlighting.enable = true;
+                    
+                    initExtra = ''
+                      # Initialize Starship prompt
+                      eval "$(starship init zsh)"
+                    '';
+                  };
+                  
+                  # Starship configuration
+                  programs.starship = {
+                    enable = true;
+                    settings = {
+                      # Disable the newline at the start of the prompt
+                      add_newline = false;
+                    };
                   };
 
                   # SSH configuration

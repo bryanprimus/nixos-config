@@ -129,6 +129,14 @@
 
                   };
 
+                  # Zsh configuration
+                  programs.zsh = {
+                    enable = true;
+                    enableCompletion = true;
+                    autosuggestion.enable = true;
+                    syntaxHighlighting.enable = true;
+                  };
+
                   # SSH configuration
                   programs.ssh = {
                     enable = true;
@@ -144,6 +152,7 @@
                     };
                   };
 
+                  # Git configuration
                   programs.git = {
                     enable = true;
                     userName = "bryanprimus";

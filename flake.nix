@@ -86,7 +86,12 @@
               "chatgpt"
               "trae"
             ];
+            taps = [ "homebrew/cask" ];
+            onActivation = {
+              cleanup = "zap";
+            };
           };
+
         };
     in
     {
@@ -114,6 +119,7 @@
               # Optional: Enable fully-declarative tap management
               # With mutableTaps disabled, taps can no longer be added imperatively with `brew tap`.
               mutableTaps = false;
+              autoMigrate = true;
             };
           }
           home-manager.darwinModules.home-manager
@@ -136,13 +142,13 @@
                     enableCompletion = true;
                     autosuggestion.enable = true;
                     syntaxHighlighting.enable = true;
-                    
+
                     initExtra = ''
                       # Initialize Starship prompt
                       eval "$(starship init zsh)"
                     '';
                   };
-                  
+
                   # Starship configuration
                   programs.starship = {
                     enable = true;

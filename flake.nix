@@ -85,6 +85,7 @@
               "ghostty"
               "chatgpt"
               "trae"
+              "spotify"
             ];
             taps = [ "homebrew/cask" ];
             onActivation = {

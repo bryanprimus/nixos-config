@@ -54,11 +54,28 @@
 
           environment.systemPackages = with pkgs; [
             vim
-            nodejs
             nixfmt-rfc-style
             bun
             starship
+            colima
+            docker
+            direnv
+            mkcert
+            nodejs
           ];
+
+          system.activationScripts.postUserActivation.text = ''
+            # Following line should allow us to avoid a logout/login cycle
+            # https://medium.com/@zmre/nix-darwin-quick-tip-activate-your-preferences-f69942a93236
+            /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+
+            if [ ! -f "$(${pkgs.mkcert}/bin/mkcert -CAROOT)/rootCA.pem" ]; then
+              echo "🔐 Running mkcert -install..." >&2
+              ${pkgs.mkcert}/bin/mkcert -install
+            else
+              echo "✅ mkcert root certificate already installed" >&2
+            fi
+          '';
 
           # Necessary for using flakes on this system.
           nix.settings.experimental-features = "nix-command flakes";
@@ -86,13 +103,13 @@
               "chatgpt"
               "trae"
               "spotify"
+              "arc"
             ];
             taps = [ "homebrew/cask" ];
             onActivation = {
               cleanup = "zap";
             };
           };
-
         };
     in
     {
@@ -147,6 +164,8 @@
                     initExtra = ''
                       # Initialize Starship prompt
                       eval "$(starship init zsh)"
+
+                      eval "$(direnv hook zsh)"
                     '';
                   };
 
@@ -179,6 +198,9 @@
                     enable = true;
                     userName = "bryanprimus";
                     userEmail = "bryantobing0@gmail.com";
+                    extraConfig = {
+                      init.defaultBranch = "main";
+                    };
                   };
 
                   # Marked broken Oct 20, 2022 check later to remove this

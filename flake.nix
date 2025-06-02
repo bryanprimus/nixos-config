@@ -62,6 +62,9 @@
             direnv
             mkcert
             nodejs
+            pnpm
+            devenv
+            yarn
           ];
 
           system.activationScripts.postUserActivation.text = ''
@@ -104,7 +107,17 @@
               "trae"
               "spotify"
               "arc"
+              "discord"
+              "cursor"
             ];
+
+            brews = [
+              # RN Environment Setup
+              "watchman"
+              "cocoapods"
+              "fastlane"
+            ];
+
             taps = [ "homebrew/cask" ];
             onActivation = {
               cleanup = "zap";
@@ -154,6 +167,17 @@
 
                   };
 
+                  # direnv configuration
+                  programs.direnv = {
+                    enable = true;
+                    enableZshIntegration = true;
+                    config = {
+                      global = {
+                        hide_env_diff = true;
+                      };
+                    };
+                  };
+
                   # Zsh configuration
                   programs.zsh = {
                     enable = true;
@@ -161,11 +185,17 @@
                     autosuggestion.enable = true;
                     syntaxHighlighting.enable = true;
 
-                    initExtra = ''
+                    shellAliases = {
+                      pn = "pnpm";
+                    };
+
+                    initContent = ''
                       # Initialize Starship prompt
                       eval "$(starship init zsh)"
 
                       eval "$(direnv hook zsh)"
+
+                      export PATH="$HOME/.bun/bin:$PATH"
                     '';
                   };
 
@@ -183,6 +213,14 @@
                     enable = true;
                     matchBlocks = {
                       "github.com" = {
+                        identityFile = "~/.ssh/id_ed25519";
+                        identitiesOnly = true;
+                        extraOptions = {
+                          AddKeysToAgent = "yes";
+                          UseKeychain = "yes";
+                        };
+                      };
+                      "git.finetiks.io" = {
                         identityFile = "~/.ssh/id_ed25519";
                         identitiesOnly = true;
                         extraOptions = {

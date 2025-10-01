@@ -1,14 +1,26 @@
 {
-  description = "Bryan's nix-darwin system flake";
+  #============================================================================
+  # Flake Description
+  #============================================================================
+  description = "Declarative macOS config for Bryan's MacBook Pro (aarch64-darwin) using nix-darwin, nix-homebrew, and home-manager; locks Homebrew taps via flake.";
 
+  #============================================================================
+  # Flake Inputs - External Dependencies
+  # Think of these as the "ingredients" for your system configuration
+  #============================================================================
   inputs = {
+    # nixpkgs: The main package repository (like npm, but for everything)
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    
+    # nix-darwin: The framework that lets you configure macOS declaratively
+    # This is what makes "darwin-rebuild" work
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
+    # nix-homebrew: Manages Homebrew declaratively (no more manual brew installs!)
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
-    # Optional: Declarative tap management
+    # Homebrew tap sources - These let you lock Homebrew packages to specific versions
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
       flake = false;
@@ -18,10 +30,14 @@
       flake = false;
     };
 
+    # home-manager: Manages your user-level configs (dotfiles, shell setup, etc.)
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
+  #============================================================================
+  # Flake Outputs - Your System Configuration
+  #============================================================================
   outputs =
     inputs@{
       self,
@@ -33,153 +49,215 @@
       home-manager,
     }:
     let
+      # Your username - change this if you have a different user
       user = "bryan";
 
+      #========================================================================
+      # Main System Configuration
+      #========================================================================
       configuration =
         { pkgs, ... }:
         {
+          # Set up your user account
           system.primaryUser = user;
           users.users.${user}.home = "/Users/${user}";
 
-          # List packages installed in system profile. To search by name, run:
-          # $ nix-env -qaP | grep wget
+          #--------------------------------------------------------------------
+          # System Packages - CLI tools installed system-wide
+          # Search for more packages at: https://search.nixos.org/packages
+          #--------------------------------------------------------------------
           environment.systemPackages = [
-            pkgs.vim
-            pkgs.nixfmt-rfc-style
-            pkgs.starship
+            pkgs.vim              # Classic text editor
+            pkgs.nixfmt-rfc-style # Formats your Nix code (like prettier/black)
+            pkgs.starship         # Beautiful cross-shell prompt
           ];
 
-          # Necessary for using flakes on this system.
+          #--------------------------------------------------------------------
+          # Nix Settings - Enables flakes and the new nix commands
+          #--------------------------------------------------------------------
           nix.settings.experimental-features = "nix-command flakes";
 
-          # Enable alternative shell support in nix-darwin.
+          #--------------------------------------------------------------------
+          # System Metadata - Don't touch these unless you know what you're doing
+          #--------------------------------------------------------------------
+          # Uncomment if you want to use fish shell instead of zsh
           # programs.fish.enable = true;
 
-          # Set Git commit hash for darwin-version.
+          # Tracks which git commit built your system (for rollbacks)
           system.configurationRevision = self.rev or self.dirtyRev or null;
 
-          # Used for backwards compatibility, please read the changelog before changing.
-          # $ darwin-rebuild changelog
+          # Compatibility version - read changelog before changing
+          # Run: darwin-rebuild changelog
           system.stateVersion = 6;
 
-          # The platform the configuration will be used on.
+          # Your Mac's architecture (Apple Silicon)
           nixpkgs.hostPlatform = "aarch64-darwin";
 
+          #--------------------------------------------------------------------
+          # Homebrew - GUI Apps & macOS-specific tools
+          # Use this for apps that don't work well with Nix or need macOS integration
+          #--------------------------------------------------------------------
           homebrew = {
             enable = true;
+            
+            # GUI applications (installed via Homebrew Cask)
             casks = [
-              "rectangle"
-              "arc"
-              "cursor"
+              "rectangle" # Window manager (like Magnet/Spectacle)
+              "arc"       # Browser
+              "cursor"    # AI-powered VS Code fork
             ];
 
+            # Homebrew package repositories
             taps = [ "homebrew/cask" ];
 
+            # "zap" = uninstall anything not listed above
+            # This keeps your system clean but be careful!
             onActivation = {
               cleanup = "zap";
             };
           };
-
         };
     in
     {
-      # Build darwin flake using:
-      # $ darwin-rebuild build --flake .#Bryans-MacBook-Pro
+      #========================================================================
+      # Host Configuration - This is your actual computer
+      # 
+      # 🚀 Quick Commands:
+      # Apply changes:  darwin-rebuild switch --flake .#Bryans-MacBook-Pro
+      # Test first:     darwin-rebuild build --flake .#Bryans-MacBook-Pro
+      # Check config:   darwin-rebuild check --flake .#Bryans-MacBook-Pro
+      # See history:    darwin-rebuild --list-generations
+      # 
+      # Pro tip: Run "check" before "switch" to catch errors without changing your system!
+      #========================================================================
       darwinConfigurations."Bryans-MacBook-Pro" = nix-darwin.lib.darwinSystem {
         modules = [
+          # Your base system config from above
           configuration
+          
+          #--------------------------------------------------------------------
+          # Nix-Homebrew Module - Makes Homebrew reproducible
+          # This locks Homebrew packages to specific versions
+          #--------------------------------------------------------------------
           nix-homebrew.darwinModules.nix-homebrew
           {
             nix-homebrew = {
-              # Install Homebrew under the default prefix
               enable = true;
-
-              # Apple Silicon Only: Also install Homebrew under the default Intel prefix for Rosetta 2
+              
+              # Install Homebrew for both ARM (native) and x86_64 (Rosetta)
+              # Useful for apps that don't have ARM versions yet
               enableRosetta = true;
 
-              # User owning the Homebrew prefix
+              # Which user owns the Homebrew installation
               user = user;
 
-              # Optional: Declarative tap management
+              # Lock Homebrew taps to the versions from your flake.lock
+              # This means "brew update" won't randomly break things!
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
               };
 
-              # Optional: Enable fully-declarative tap management
-              #
-              # With mutableTaps disabled, taps can no longer be added imperatively with `brew tap`.
+              # Prevent manual "brew tap" - all taps must be declared above
               mutableTaps = false;
             };
           }
-          # Optional: Align homebrew taps config with nix-homebrew
+          
+          #--------------------------------------------------------------------
+          # Tap Sync - Keeps your Homebrew config in sync with nix-homebrew
+          #--------------------------------------------------------------------
           (
             { config, ... }:
             {
               homebrew.taps = builtins.attrNames config.nix-homebrew.taps;
             }
           )
+          
+          #--------------------------------------------------------------------
+          # Home Manager - Your Personal User Configuration
+          # This manages your dotfiles, shell, and user-level packages
+          #--------------------------------------------------------------------
           home-manager.darwinModules.home-manager
           {
+            # Use the same nixpkgs as your system config
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            
+            # Your personal user settings
             home-manager.users.${user} =
               { pkgs, ... }:
               {
+                #--------------------------------------------------------------
+                # Home Manager Metadata
+                #--------------------------------------------------------------
                 home = {
                   enableNixpkgsReleaseCheck = false;
                   stateVersion = "25.05";
                 };
 
-                # SSH configuration
+                #--------------------------------------------------------------
+                # SSH Config - Manage your SSH keys and host settings
+                # This creates your ~/.ssh/config file
+                #--------------------------------------------------------------
                 programs.ssh = {
                   enable = true;
                   enableDefaultConfig = false;
                   matchBlocks = {
+                    # GitHub SSH configuration
                     "github.com" = {
                       identityFile = "~/.ssh/id_ed25519";
                       identitiesOnly = true;
                       extraOptions = {
-                        AddKeysToAgent = "yes";
-                        UseKeychain = "yes";
+                        AddKeysToAgent = "yes"; # Auto-load key into ssh-agent
+                        UseKeychain = "yes";    # Store passphrase in macOS Keychain
                       };
                     };
                   };
                 };
 
-                # Git configuration
+                #--------------------------------------------------------------
+                # Git Config - Your version control settings
+                # This creates your ~/.gitconfig file
+                #--------------------------------------------------------------
                 programs.git = {
                   enable = true;
                   userName = "bryanprimus";
                   userEmail = "bryantobing0@gmail.com";
                   extraConfig = {
+                    # Use "main" instead of "master" for new repos
                     init.defaultBranch = "main";
                   };
                 };
 
+                #--------------------------------------------------------------
+                # Zsh Config - Your shell configuration
+                # This manages your ~/.zshrc
+                #--------------------------------------------------------------
                 programs.zsh = {
                   enable = true;
-                  enableCompletion = true;
-                  autosuggestion.enable = true;
-                  syntaxHighlighting.enable = true;
+                  enableCompletion = true;        # Press TAB to autocomplete
+                  autosuggestion.enable = true;   # Fish-style suggestions
+                  syntaxHighlighting.enable = true; # Color your commands
+                  
+                  # Custom code that runs when you open a terminal
                   initContent = ''
-                    	# Initialize Starship
-                    	eval "$(starship init zsh)"
+                    # Start Starship prompt
+                    eval "$(starship init zsh)"
                   '';
                 };
 
-                # Starship configuration
+                #--------------------------------------------------------------
+                # Starship Config - Customize your shell prompt
+                # See more options: https://starship.rs/config/
+                #--------------------------------------------------------------
                 programs.starship = {
                   enable = true;
                   settings = {
-                    # Disable the newline at the start of the prompt
+                    # Don't add empty line before prompt (more compact)
                     add_newline = false;
                   };
                 };
               };
-
-            # Optionally, use home-manager.extraSpecialArgs to pass
-            # arguments to home.nix
           }
         ];
       };

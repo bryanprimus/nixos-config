@@ -3,10 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nix-darwin.url = "github:LnL7/nix-darwin/master";
+    nix-darwin.url = "github:nix-darwin/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
-    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
     # Optional: Declarative tap management
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
@@ -14,10 +15,6 @@
     };
     homebrew-cask = {
       url = "github:homebrew/homebrew-cask";
-      flake = false;
-    };
-    homebrew-bundle = {
-      url = "github:homebrew/homebrew-bundle";
       flake = false;
     };
 
@@ -33,52 +30,24 @@
       nix-homebrew,
       homebrew-core,
       homebrew-cask,
-      homebrew-bundle,
       home-manager,
-      ...
     }:
     let
       user = "bryan";
-      system = "aarch64-darwin";
+
       configuration =
         { pkgs, ... }:
         {
-          # Add user configuration part of home-manager ?
-          users.users.${user} = {
-            name = user;
-            home = "/Users/${user}";
-          };
+          system.primaryUser = user;
+          users.users.${user}.home = "/Users/${user}";
 
           # List packages installed in system profile. To search by name, run:
           # $ nix-env -qaP | grep wget
-
-          environment.systemPackages = with pkgs; [
-            vim
-            nixfmt-rfc-style
-            bun
-            starship
-            colima
-            docker
-            direnv
-            mkcert
-            nodejs
-            pnpm
-            devenv
-            yarn
+          environment.systemPackages = [
+            pkgs.vim
+            pkgs.nixfmt-rfc-style
+            pkgs.starship
           ];
-
-          system.activationScripts.postUserActivation.text = ''
-            # Following line should allow us to avoid a logout/login cycle
-            # https://medium.com/@zmre/nix-darwin-quick-tip-activate-your-preferences-f69942a93236
-            /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-
-            if [ ! -f "$(${pkgs.mkcert}/bin/mkcert -CAROOT)/rootCA.pem" ]; then
-              echo "🔐 Running mkcert -install..." >&2
-              ${pkgs.mkcert}/bin/mkcert -install
-            else
-              echo "✅ mkcert root certificate already installed" >&2
-            fi
-          '';
 
           # Necessary for using flakes on this system.
           nix.settings.experimental-features = "nix-command flakes";
@@ -94,35 +63,23 @@
           system.stateVersion = 6;
 
           # The platform the configuration will be used on.
-          nixpkgs.hostPlatform = system;
+          nixpkgs.hostPlatform = "aarch64-darwin";
 
           homebrew = {
             enable = true;
             casks = [
               "rectangle"
-              "whatsapp"
-              "cleanshot"
-              "ghostty"
-              "chatgpt"
-              "trae"
-              "spotify"
               "arc"
-              "discord"
               "cursor"
             ];
 
-            brews = [
-              # RN Environment Setup
-              "watchman"
-              "cocoapods"
-              "fastlane"
-            ];
-
             taps = [ "homebrew/cask" ];
+
             onActivation = {
               cleanup = "zap";
             };
           };
+
         };
     in
     {
@@ -137,6 +94,9 @@
               # Install Homebrew under the default prefix
               enable = true;
 
+              # Apple Silicon Only: Also install Homebrew under the default Intel prefix for Rosetta 2
+              enableRosetta = true;
+
               # User owning the Homebrew prefix
               user = user;
 
@@ -144,108 +104,82 @@
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
-                "homebrew/homebrew-bundle" = homebrew-bundle;
               };
 
               # Optional: Enable fully-declarative tap management
+              #
               # With mutableTaps disabled, taps can no longer be added imperatively with `brew tap`.
               mutableTaps = false;
-              autoMigrate = true;
             };
           }
+          # Optional: Align homebrew taps config with nix-homebrew
+          (
+            { config, ... }:
+            {
+              homebrew.taps = builtins.attrNames config.nix-homebrew.taps;
+            }
+          )
           home-manager.darwinModules.home-manager
           {
-            # Enable home-manager
-            home-manager = {
-              useGlobalPkgs = true;
-              users.${user} =
-                { pkgs, ... }:
-                {
-                  home = {
-                    enableNixpkgsReleaseCheck = false;
-                    stateVersion = "23.11";
-
-                  };
-
-                  # direnv configuration
-                  programs.direnv = {
-                    enable = true;
-                    enableZshIntegration = true;
-                    config = {
-                      global = {
-                        hide_env_diff = true;
-                      };
-                    };
-                  };
-
-                  # Zsh configuration
-                  programs.zsh = {
-                    enable = true;
-                    enableCompletion = true;
-                    autosuggestion.enable = true;
-                    syntaxHighlighting.enable = true;
-
-                    shellAliases = {
-                      pn = "pnpm";
-                    };
-
-                    initContent = ''
-                      # Initialize Starship prompt
-                      eval "$(starship init zsh)"
-
-                      eval "$(direnv hook zsh)"
-
-                      export PATH="$HOME/.bun/bin:$PATH"
-                    '';
-                  };
-
-                  # Starship configuration
-                  programs.starship = {
-                    enable = true;
-                    settings = {
-                      # Disable the newline at the start of the prompt
-                      add_newline = false;
-                    };
-                  };
-
-                  # SSH configuration
-                  programs.ssh = {
-                    enable = true;
-                    matchBlocks = {
-                      "github.com" = {
-                        identityFile = "~/.ssh/id_ed25519";
-                        identitiesOnly = true;
-                        extraOptions = {
-                          AddKeysToAgent = "yes";
-                          UseKeychain = "yes";
-                        };
-                      };
-                      "git.finetiks.io" = {
-                        identityFile = "~/.ssh/id_ed25519";
-                        identitiesOnly = true;
-                        extraOptions = {
-                          AddKeysToAgent = "yes";
-                          UseKeychain = "yes";
-                        };
-                      };
-                    };
-                  };
-
-                  # Git configuration
-                  programs.git = {
-                    enable = true;
-                    userName = "bryanprimus";
-                    userEmail = "bryantobing0@gmail.com";
-                    extraConfig = {
-                      init.defaultBranch = "main";
-                    };
-                  };
-
-                  # Marked broken Oct 20, 2022 check later to remove this
-                  # https://github.com/nix-community/home-manager/issues/3344
-                  manual.manpages.enable = false;
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.${user} =
+              { pkgs, ... }:
+              {
+                home = {
+                  enableNixpkgsReleaseCheck = false;
+                  stateVersion = "25.05";
                 };
-            };
+
+                # SSH configuration
+                programs.ssh = {
+                  enable = true;
+                  enableDefaultConfig = false;
+                  matchBlocks = {
+                    "github.com" = {
+                      identityFile = "~/.ssh/id_ed25519";
+                      identitiesOnly = true;
+                      extraOptions = {
+                        AddKeysToAgent = "yes";
+                        UseKeychain = "yes";
+                      };
+                    };
+                  };
+                };
+
+                # Git configuration
+                programs.git = {
+                  enable = true;
+                  userName = "bryanprimus";
+                  userEmail = "bryantobing0@gmail.com";
+                  extraConfig = {
+                    init.defaultBranch = "main";
+                  };
+                };
+
+                programs.zsh = {
+                  enable = true;
+                  enableCompletion = true;
+                  autosuggestion.enable = true;
+                  syntaxHighlighting.enable = true;
+                  initContent = ''
+                    	# Initialize Starship
+                    	eval "$(starship init zsh)"
+                  '';
+                };
+
+                # Starship configuration
+                programs.starship = {
+                  enable = true;
+                  settings = {
+                    # Disable the newline at the start of the prompt
+                    add_newline = false;
+                  };
+                };
+              };
+
+            # Optionally, use home-manager.extraSpecialArgs to pass
+            # arguments to home.nix
           }
         ];
       };

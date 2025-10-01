@@ -11,7 +11,7 @@
   inputs = {
     # nixpkgs: The main package repository (like npm, but for everything)
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    
+
     # nix-darwin: The framework that lets you configure macOS declaratively
     # This is what makes "darwin-rebuild" work
     nix-darwin.url = "github:nix-darwin/nix-darwin/master";
@@ -67,10 +67,10 @@
           # Search for more packages at: https://search.nixos.org/packages
           #--------------------------------------------------------------------
           environment.systemPackages = with pkgs; [
-            vim              # Classic text editor
+            vim # Classic text editor
             nixfmt-rfc-style # Formats your Nix code (like prettier/black)
-            starship         # Beautiful cross-shell prompt
-            bun              # Bun is a fast, modern JavaScript runtime
+            starship # Beautiful cross-shell prompt
+            bun # Bun is a fast, modern JavaScript runtime
           ];
 
           #--------------------------------------------------------------------
@@ -100,13 +100,13 @@
           #--------------------------------------------------------------------
           homebrew = {
             enable = true;
-            
+
             # GUI applications (installed via Homebrew Cask)
             casks = [
               "rectangle" # Window manager (like Magnet/Spectacle)
-              "arc"       # Browser
-              "cursor"    # AI-powered VS Code fork
-              "whatsapp"  # Messaging app
+              "arc" # Browser
+              "cursor" # AI-powered VS Code fork
+              "whatsapp" # Messaging app
             ];
 
             # CLI applications
@@ -130,20 +130,20 @@
     {
       #========================================================================
       # Host Configuration - This is your actual computer
-      # 
+      #
       # 🚀 Quick Commands:
       # Apply changes:  darwin-rebuild switch --flake .#Bryans-MacBook-Pro
       # Test first:     darwin-rebuild build --flake .#Bryans-MacBook-Pro
       # Check config:   darwin-rebuild check --flake .#Bryans-MacBook-Pro
       # See history:    darwin-rebuild --list-generations
-      # 
+      #
       # Pro tip: Run "check" before "switch" to catch errors without changing your system!
       #========================================================================
       darwinConfigurations."Bryans-MacBook-Pro" = nix-darwin.lib.darwinSystem {
         modules = [
           # Your base system config from above
           configuration
-          
+
           #--------------------------------------------------------------------
           # Nix-Homebrew Module - Makes Homebrew reproducible
           # This locks Homebrew packages to specific versions
@@ -152,7 +152,7 @@
           {
             nix-homebrew = {
               enable = true;
-              
+
               # Install Homebrew for both ARM (native) and x86_64 (Rosetta)
               # Useful for apps that don't have ARM versions yet
               enableRosetta = true;
@@ -171,7 +171,7 @@
               mutableTaps = false;
             };
           }
-          
+
           #--------------------------------------------------------------------
           # Tap Sync - Keeps your Homebrew config in sync with nix-homebrew
           #--------------------------------------------------------------------
@@ -181,7 +181,7 @@
               homebrew.taps = builtins.attrNames config.nix-homebrew.taps;
             }
           )
-          
+
           #--------------------------------------------------------------------
           # Home Manager - Your Personal User Configuration
           # This manages your dotfiles, shell, and user-level packages
@@ -191,7 +191,7 @@
             # Use the same nixpkgs as your system config
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            
+
             # Your personal user settings
             home-manager.users.${user} =
               { pkgs, ... }:
@@ -218,7 +218,7 @@
                       identitiesOnly = true;
                       extraOptions = {
                         AddKeysToAgent = "yes"; # Auto-load key into ssh-agent
-                        UseKeychain = "yes";    # Store passphrase in macOS Keychain
+                        UseKeychain = "yes"; # Store passphrase in macOS Keychain
                       };
                     };
                   };
@@ -244,14 +244,44 @@
                 #--------------------------------------------------------------
                 programs.zsh = {
                   enable = true;
-                  enableCompletion = true;        # Press TAB to autocomplete
-                  autosuggestion.enable = true;   # Fish-style suggestions
+                  enableCompletion = true; # Press TAB to autocomplete
+                  autosuggestion.enable = true; # Fish-style suggestions
                   syntaxHighlighting.enable = true; # Color your commands
-                  
+
                   # Custom code that runs when you open a terminal
                   initContent = ''
                     # Start Starship prompt
                     eval "$(starship init zsh)"
+
+                    # Function: update_terminal_cwd
+                    # Purpose: Notifies your terminal emulator of the current working directory
+                    # This is especially useful for features like "Open new tab here" (e.g., Cmd+T in iTerm2 or Terminal.app on macOS),
+                    # allowing new tabs or splits to start in the same directory as your current shell.
+                    # It works by emitting a special escape sequence (\e]7;) with the current directory encoded as a file:// URL.
+                    # This is a standard used by many modern terminal emulators to track shell location.
+                    update_terminal_cwd() {
+                      local url_path=""
+                      {
+                        local i ch hexch LC_CTYPE=C LC_ALL=
+                        # Loop through each character in $PWD and percent-encode if needed
+                        for ((i = 1; i <= ''${#PWD}; ++i)); do
+                          ch="$PWD[i]"
+                          if [[ "$ch" =~ [/._~A-Za-z0-9-] ]]; then
+                            url_path+="$ch"
+                          else
+                            printf -v hexch "%02X" "'$ch"
+                            url_path+="%$hexch"
+                          fi
+                        done
+                      }
+                      # Send the escape sequence to update the terminal's idea of the current directory
+                      printf '\e]7;%s\a' "file://$(hostname)$url_path"
+                    }
+
+                    # Ensure update_terminal_cwd runs before each prompt is displayed,
+                    # so the terminal always knows your up-to-date location.
+                    autoload -Uz add-zsh-hook
+                    add-zsh-hook precmd update_terminal_cwd
                   '';
                 };
 

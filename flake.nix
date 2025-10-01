@@ -66,10 +66,11 @@
           # System Packages - CLI tools installed system-wide
           # Search for more packages at: https://search.nixos.org/packages
           #--------------------------------------------------------------------
-          environment.systemPackages = [
-            pkgs.vim              # Classic text editor
-            pkgs.nixfmt-rfc-style # Formats your Nix code (like prettier/black)
-            pkgs.starship         # Beautiful cross-shell prompt
+          environment.systemPackages = with pkgs; [
+            vim              # Classic text editor
+            nixfmt-rfc-style # Formats your Nix code (like prettier/black)
+            starship         # Beautiful cross-shell prompt
+            bun              # Bun is a fast, modern JavaScript runtime
           ];
 
           #--------------------------------------------------------------------
@@ -105,6 +106,14 @@
               "rectangle" # Window manager (like Magnet/Spectacle)
               "arc"       # Browser
               "cursor"    # AI-powered VS Code fork
+              "whatsapp"  # Messaging app
+            ];
+
+            # CLI applications
+            brews = [
+              "node"
+              "watchman" # For react native development
+              "cocoapods" # For iOS development
             ];
 
             # Homebrew package repositories

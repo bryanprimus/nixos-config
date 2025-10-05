@@ -107,6 +107,8 @@
               "arc" # Browser
               "cursor" # AI-powered VS Code fork
               "whatsapp" # Messaging app
+              "chatgpt" # AI-powered chatbot desktop app
+              "cleanshot" # Screenshot tool
             ];
 
             # CLI applications

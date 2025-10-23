@@ -109,6 +109,10 @@
               "whatsapp" # Messaging app
               "chatgpt" # AI-powered chatbot desktop app
               "cleanshot" # Screenshot tool
+              "telegram" # Messaging app
+              "zed" # Code editor
+              "outerbase-studio" # sql gui client
+              "chatgpt-atlas" # AI-powered browser
             ];
 
             # CLI applications
@@ -116,6 +120,9 @@
               "node"
               "watchman" # For react native development
               "cocoapods" # For iOS development
+
+              "unar" # archive extractor
+              "sqlite" # SQL client
             ];
 
             # Homebrew package repositories
@@ -232,9 +239,11 @@
                 #--------------------------------------------------------------
                 programs.git = {
                   enable = true;
-                  userName = "bryanprimus";
-                  userEmail = "bryantobing0@gmail.com";
-                  extraConfig = {
+                  settings = {
+                    user = {
+                      name = "bryanprimus";
+                      email = "bryantobing0@gmail.com";
+                    };
                     # Use "main" instead of "master" for new repos
                     init.defaultBranch = "main";
                   };
@@ -252,6 +261,10 @@
 
                   # Custom code that runs when you open a terminal
                   initContent = ''
+                    # force the use of sqlite3 homebrew instead of the default by macOS
+                    export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
+
+
                     # Start Starship prompt
                     eval "$(starship init zsh)"
 

@@ -113,6 +113,7 @@
               "zed" # Code editor
               "outerbase-studio" # sql gui client
               "chatgpt-atlas" # AI-powered browser
+              "vlc" # Video player
             ];
 
             # CLI applications

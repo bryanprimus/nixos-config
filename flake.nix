@@ -114,6 +114,7 @@
               "outerbase-studio" # sql gui client
               "chatgpt-atlas" # AI-powered browser
               "vlc" # Video player
+              "obsidian" # Note taking app
             ];
 
             # CLI applications

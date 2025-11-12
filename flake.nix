@@ -115,6 +115,7 @@
               "chatgpt-atlas" # AI-powered browser
               "vlc" # Video player
               "obsidian" # Note taking app
+              "ghostty" # Terminal emulator
             ];
 
             # CLI applications

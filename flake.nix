@@ -71,6 +71,7 @@
             nixfmt-rfc-style # Formats your Nix code (like prettier/black)
             starship # Beautiful cross-shell prompt
             bun # Bun is a fast, modern JavaScript runtime
+            go # Go programming language
           ];
 
           #--------------------------------------------------------------------

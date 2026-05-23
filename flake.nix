@@ -301,6 +301,27 @@
                     # so the terminal always knows your up-to-date location.
                     autoload -Uz add-zsh-hook
                     add-zsh-hook precmd update_terminal_cwd
+
+                    # Free up a port by gracefully killing the process using it
+                    freeport() {
+                      local pids
+                      pids=$(lsof -t -i tcp:"$1")
+                      if [ -n "$pids" ]; then
+                        echo "Gracefully stopping processes on port $1..."
+                        echo "$pids" | xargs kill -15
+                        sleep 1
+
+                        local remaining_pids
+                        remaining_pids=$(lsof -t -i tcp:"$1")
+                        if [ -n "$remaining_pids" ]; then
+                          echo "Processes did not stop. Force killing..."
+                          echo "$remaining_pids" | xargs kill -9
+                        fi
+                        echo "Port $1 is now free."
+                      else
+                        echo "No process found running on port $1."
+                      fi
+                    }
                   '';
                 };
 

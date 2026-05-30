@@ -48,7 +48,12 @@
 
       # Main System Configuration
       configuration =
-        { pkgs, ... }:
+        {
+          pkgs,
+          lib,
+          config,
+          ...
+        }:
         {
           # Set up your user account
           system.primaryUser = user;
@@ -74,12 +79,27 @@
             docker
             docker-compose
             colima
+
+            # ai tools
+            kiro-cli
           ];
 
           #--------------------------------------------------------------------
           # Nix Settings - Enables flakes and the new nix commands
           #--------------------------------------------------------------------
           nix.settings.experimental-features = "nix-command flakes";
+
+          # Allow only specific unfree packages (e.g., kiro-cli)
+          nixpkgs.config.allowUnfreePredicate =
+            pkg:
+            builtins.elem (lib.getName pkg) [
+              "kiro-cli"
+            ];
+
+          # Run GC on every darwin-rebuild (keep last 7 days of generations)
+          system.activationScripts.nixGc.text = ''
+            ${config.nix.package}/bin/nix-collect-garbage --delete-older-than 7d
+          '';
 
           #--------------------------------------------------------------------
           # System Metadata - Don't touch these unless you know what you're doing
@@ -126,7 +146,6 @@
               # ai tools
               "zed"
               "grok-build"
-              "kiro-cli"
               "codex-app"
             ];
 

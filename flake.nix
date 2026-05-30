@@ -1,13 +1,9 @@
 {
-  #============================================================================
   # Flake Description
-  #============================================================================
   description = "Declarative macOS config for Bryan's MacBook Pro (aarch64-darwin) using nix-darwin, nix-homebrew, and home-manager; locks Homebrew taps via flake.";
 
-  #============================================================================
   # Flake Inputs - External Dependencies
   # Think of these as the "ingredients" for your system configuration
-  #============================================================================
   inputs = {
     # nixpkgs: The main package repository (like npm, but for everything)
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -18,7 +14,7 @@
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
     # nix-homebrew: Manages Homebrew declaratively (no more manual brew installs!)
-    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    nix-homebrew.url = "github:zhaofengli/nix-homebrew/main";
 
     # Homebrew tap sources - These let you lock Homebrew packages to specific versions
     homebrew-core = {
@@ -35,26 +31,22 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  #============================================================================
   # Flake Outputs - Your System Configuration
-  #============================================================================
   outputs =
-    inputs@{
+    {
       self,
       nix-darwin,
-      nixpkgs,
       nix-homebrew,
       homebrew-core,
       homebrew-cask,
       home-manager,
+      ...
     }:
     let
       # Your username - change this if you have a different user
       user = "bryan";
 
-      #========================================================================
       # Main System Configuration
-      #========================================================================
       configuration =
         { pkgs, ... }:
         {
@@ -62,16 +54,26 @@
           system.primaryUser = user;
           users.users.${user}.home = "/Users/${user}";
 
-          #--------------------------------------------------------------------
           # System Packages - CLI tools installed system-wide
           # Search for more packages at: https://search.nixos.org/packages
-          #--------------------------------------------------------------------
           environment.systemPackages = with pkgs; [
-            vim # Classic text editor
-            nixfmt-rfc-style # Formats your Nix code (like prettier/black)
-            starship # Beautiful cross-shell prompt
-            bun # Bun is a fast, modern JavaScript runtime
-            go # Go programming language
+            # Code Editor
+            vim
+
+            # Formatter
+            nixfmt
+
+            # JS Toolkit
+            bun
+
+            # nix language server
+            nil
+            nixd
+
+            # Container tools (Nix-managed)
+            docker
+            docker-compose
+            colima
           ];
 
           #--------------------------------------------------------------------
@@ -104,33 +106,39 @@
 
             # GUI applications (installed via Homebrew Cask)
             casks = [
-              "rectangle" # Window manager (like Magnet/Spectacle)
-              "arc" # Browser
-              "cursor" # AI-powered VS Code fork
-              "whatsapp" # Messaging app
-              "chatgpt" # AI-powered chatbot desktop app
-              "cleanshot" # Screenshot tool
-              "telegram" # Messaging app
-              "zed" # Code editor
-              "outerbase-studio" # sql gui client
-              "chatgpt-atlas" # AI-powered browser
-              "vlc" # Video player
-              "obsidian" # Note taking app
-              "ghostty" # Terminal emulator
+              # utils
+              "rectangle"
+              "cleanshot"
+              # "outerbase-studio" # not always needed
+
+              # browsers
+              "arc"
+              "chatgpt-atlas"
+
+              # messagings
+              "whatsapp"
+              "discord"
+              # "telegram" # not always needed
+
+              # terminal
+              "iterm2"
+
+              # ai tools
+              "zed"
+              "grok-build"
+              "kiro-cli"
+              "codex-app"
             ];
 
             # CLI applications
             brews = [
+              # JS Toolkit
               "node"
-              "watchman" # For react native development
-              "cocoapods" # For iOS development
+              "opencode"
 
-              "unar" # archive extractor
-              "sqlite" # SQL client
+              # easy postgres
+              # "libpq" # not always needed
             ];
-
-            # Homebrew package repositories
-            taps = [ "homebrew/cask" ];
 
             # "zap" = uninstall anything not listed above
             # This keeps your system clean but be careful!
@@ -205,6 +213,9 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
 
+            # Backup any existing dotfiles that would be overwritten
+            home-manager.backupFileExtension = "bak";
+
             # Your personal user settings
             home-manager.users.${user} =
               { pkgs, ... }:
@@ -218,21 +229,26 @@
                 };
 
                 #--------------------------------------------------------------
+                # Docker Compose CLI plugin (Nix)
+                # Makes `docker compose` work via the Nix docker-compose
+                #--------------------------------------------------------------
+                home.file.".docker/cli-plugins/docker-compose".source =
+                  "${pkgs.docker-compose}/libexec/docker/cli-plugins/docker-compose";
+
+                #--------------------------------------------------------------
                 # SSH Config - Manage your SSH keys and host settings
                 # This creates your ~/.ssh/config file
                 #--------------------------------------------------------------
                 programs.ssh = {
                   enable = true;
                   enableDefaultConfig = false;
-                  matchBlocks = {
+                  settings = {
                     # GitHub SSH configuration
                     "github.com" = {
-                      identityFile = "~/.ssh/id_ed25519";
-                      identitiesOnly = true;
-                      extraOptions = {
-                        AddKeysToAgent = "yes"; # Auto-load key into ssh-agent
-                        UseKeychain = "yes"; # Store passphrase in macOS Keychain
-                      };
+                      IdentityFile = "~/.ssh/id_ed25519";
+                      IdentitiesOnly = true;
+                      AddKeysToAgent = "yes"; # Auto-load key into ssh-agent
+                      UseKeychain = "yes"; # Store passphrase in macOS Keychain
                     };
                   };
                 };
@@ -253,10 +269,8 @@
                   };
                 };
 
-                #--------------------------------------------------------------
                 # Zsh Config - Your shell configuration
                 # This manages your ~/.zshrc
-                #--------------------------------------------------------------
                 programs.zsh = {
                   enable = true;
                   enableCompletion = true; # Press TAB to autocomplete
@@ -265,42 +279,11 @@
 
                   # Custom code that runs when you open a terminal
                   initContent = ''
-                    # force the use of sqlite3 homebrew instead of the default by macOS
-                    export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
+                    # bun global path
+                    export PATH="$HOME/.bun/bin:$PATH"
 
-
-                    # Start Starship prompt
-                    eval "$(starship init zsh)"
-
-                    # Function: update_terminal_cwd
-                    # Purpose: Notifies your terminal emulator of the current working directory
-                    # This is especially useful for features like "Open new tab here" (e.g., Cmd+T in iTerm2 or Terminal.app on macOS),
-                    # allowing new tabs or splits to start in the same directory as your current shell.
-                    # It works by emitting a special escape sequence (\e]7;) with the current directory encoded as a file:// URL.
-                    # This is a standard used by many modern terminal emulators to track shell location.
-                    update_terminal_cwd() {
-                      local url_path=""
-                      {
-                        local i ch hexch LC_CTYPE=C LC_ALL=
-                        # Loop through each character in $PWD and percent-encode if needed
-                        for ((i = 1; i <= ''${#PWD}; ++i)); do
-                          ch="$PWD[i]"
-                          if [[ "$ch" =~ [/._~A-Za-z0-9-] ]]; then
-                            url_path+="$ch"
-                          else
-                            printf -v hexch "%02X" "'$ch"
-                            url_path+="%$hexch"
-                          fi
-                        done
-                      }
-                      # Send the escape sequence to update the terminal's idea of the current directory
-                      printf '\e]7;%s\a' "file://$(hostname)$url_path"
-                    }
-
-                    # Ensure update_terminal_cwd runs before each prompt is displayed,
-                    # so the terminal always knows your up-to-date location.
-                    autoload -Uz add-zsh-hook
-                    add-zsh-hook precmd update_terminal_cwd
+                    # libpq postgresql
+                    export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
                     # Free up a port by gracefully killing the process using it
                     freeport() {
@@ -326,15 +309,31 @@
                 };
 
                 #--------------------------------------------------------------
-                # Starship Config - Customize your shell prompt
-                # See more options: https://starship.rs/config/
+                # Oh My Posh Config - Customize your shell prompt
+                # See more options: https://ohmyposh.dev/docs
                 #--------------------------------------------------------------
                 programs.starship = {
                   enable = true;
+                  enableZshIntegration = true;
+
                   settings = {
-                    # Don't add empty line before prompt (more compact)
                     add_newline = false;
+
+                    character = {
+                      success_symbol = "[❯](bold green)";
+                      error_symbol = "[❯](bold red)";
+                    };
                   };
+                };
+
+                programs.zoxide = {
+                  enable = true;
+                  enableZshIntegration = true;
+                };
+
+                programs.fzf = {
+                  enable = true;
+                  enableZshIntegration = true;
                 };
               };
           }

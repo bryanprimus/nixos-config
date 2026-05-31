@@ -147,6 +147,9 @@
               "zed"
               "grok-build"
               "codex-app"
+
+              # productivity
+              "linear"
             ];
 
             # CLI applications

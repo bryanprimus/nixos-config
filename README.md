@@ -29,6 +29,12 @@ Settings > Keyboard > (Set both to max) Key repeat rate and Delay until repeat
 Settings > Desktop & Dock > (Enable) Automatically hide and show the dock 
 ```
 
+Reset dock content
+
+```
+defaults write com.apple.dock persistent-apps -array && defaults write com.apple.dock persistent-others -array && defaults write com.apple.dock show-recents -bool false && killall Dock
+```
+
 ## Setup Nix
 
 First go to [nix-darwin](https://github.com/nix-darwin/nix-darwin) repo

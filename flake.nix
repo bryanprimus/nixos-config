@@ -89,17 +89,19 @@
           #--------------------------------------------------------------------
           nix.settings.experimental-features = "nix-command flakes";
 
+          # Automatic GC: keep last 7 days of generations
+          nix.gc = {
+            automatic = true;
+            interval = { Hour = 3; Minute = 15; };
+            options = "--delete-older-than 7d";
+          };
+
           # Allow only specific unfree packages (e.g., kiro-cli)
           nixpkgs.config.allowUnfreePredicate =
             pkg:
             builtins.elem (lib.getName pkg) [
               "kiro-cli"
             ];
-
-          # Run GC on every darwin-rebuild (keep last 7 days of generations)
-          system.activationScripts.nixGc.text = ''
-            ${config.nix.package}/bin/nix-collect-garbage --delete-older-than 7d
-          '';
 
           #--------------------------------------------------------------------
           # System Metadata - Don't touch these unless you know what you're doing
@@ -305,7 +307,7 @@
                     export PATH="$HOME/.bun/bin:$PATH"
 
                     # libpq postgresql
-                    export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+                    # export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
 
                     # Free up a port by gracefully killing the process using it
                     freeport() {

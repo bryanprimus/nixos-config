@@ -290,6 +290,10 @@
                     };
                     # Use "main" instead of "master" for new repos
                     init.defaultBranch = "main";
+
+                    # Only allow git pull to fast-forward; fail on divergence.
+                    # Forces explicit choice per-invocation: --rebase or --no-rebase (merge).
+                    pull.ff = "only";
                   };
                 };
 

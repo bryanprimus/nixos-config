@@ -103,6 +103,13 @@
               "kiro-cli"
             ];
 
+          # Pin iTerm2's default profile to the Catppuccin Mocha Dynamic Profile
+          # (Guid matches ./iterm2/catppuccin-mocha.json). Apply while iTerm2 is
+          # closed, or it may overwrite this value on next quit.
+          system.defaults.CustomUserPreferences."com.googlecode.iterm2" = {
+            "Default Bookmark Guid" = "D9CB8F1B-EED3-4E4E-A091-58B2B84C806F";
+          };
+
           #--------------------------------------------------------------------
           # System Metadata - Don't touch these unless you know what you're doing
           #--------------------------------------------------------------------
@@ -251,6 +258,9 @@
                   enableNixpkgsReleaseCheck = false;
                   stateVersion = "25.05";
                 };
+
+                home.file."Library/Application Support/iTerm2/DynamicProfiles/catppuccin-mocha.json".source =
+                  ./iterm2/catppuccin-mocha.json;
 
                 #--------------------------------------------------------------
                 # Docker Compose CLI plugin (Nix)

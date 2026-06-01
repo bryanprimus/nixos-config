@@ -106,8 +106,14 @@
           # Pin iTerm2's default profile to the Catppuccin Mocha Dynamic Profile
           # (Guid matches ./iterm2/catppuccin-mocha.json). Apply while iTerm2 is
           # closed, or it may overwrite this value on next quit.
+          #
+          # Also set app-level Appearance theme (Minimal) so the window chrome
+          # matches the dark Catppuccin profile instead of showing a white title bar.
           system.defaults.CustomUserPreferences."com.googlecode.iterm2" = {
             "Default Bookmark Guid" = "D9CB8F1B-EED3-4E4E-A091-58B2B84C806F";
+
+            # iTerm2 Appearance > General > Theme: Minimal
+            "TabStyleWithAutomaticOption" = 5;
           };
 
           #--------------------------------------------------------------------

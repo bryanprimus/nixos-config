@@ -25,6 +25,10 @@
       url = "github:homebrew/homebrew-cask";
       flake = false;
     };
+    homebrew-browseros = {
+      url = "github:browseros-ai/homebrew-tap";
+      flake = false;
+    };
 
     # home-manager: Manages your user-level configs (dotfiles, shell setup, etc.)
     home-manager.url = "github:nix-community/home-manager";
@@ -39,6 +43,7 @@
       nix-homebrew,
       homebrew-core,
       homebrew-cask,
+      homebrew-browseros,
       home-manager,
       ...
     }:
@@ -141,6 +146,13 @@
 
             # GUI applications (installed via Homebrew Cask)
             casks = [
+              "cursor-cli"
+              "t3-code"
+              "capcut"
+              "codex"
+              "cloudflare-warp"
+              "tailscale-app"
+              "claude-code"
               # utils
               "rectangle"
               "bryan/custom/cleanshot"
@@ -149,6 +161,7 @@
               # browsers
               "arc"
               "chatgpt-atlas"
+              "browseros"
 
               # messagings
               "whatsapp"
@@ -162,6 +175,10 @@
               "zed"
               "grok-build"
               "codex-app"
+              "antigravity"
+              "antigravity-cli"
+              "claude"
+              "opencode-desktop"
 
               # productivity
               "linear"
@@ -169,8 +186,22 @@
 
             # CLI applications
             brews = [
+              "pngquant"
+              "gh"
+              "cocoapods"
+
+              "git-filter-repo"
+              "pipx"
+              "direnv"
+              "go"
+              "ffmpeg"
+              "yt-dlp"
+              "pycparser" # direct Homebrew dependency of yt-dlp
               # JS Toolkit
               "node"
+              "pnpm"
+
+              # ai tools
               "opencode"
 
               # easy postgres
@@ -223,6 +254,7 @@
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
+                "browseros-ai/homebrew-tap" = homebrew-browseros;
               };
 
               # Prevent manual "brew tap" - all taps must be declared above
@@ -332,8 +364,14 @@
 
                   # Custom code that runs when you open a terminal
                   initContent = ''
+                    # direnv hook for zsh
+                    eval "$(direnv hook zsh)"
+
                     # bun global path
                     export PATH="$HOME/.bun/bin:$PATH"
+
+                    # pipx (cloudinary-cli, etc.)
+                    export PATH="$HOME/.local/bin:$PATH"
 
                     # libpq postgresql
                     # export PATH="/opt/homebrew/opt/libpq/bin:$PATH"

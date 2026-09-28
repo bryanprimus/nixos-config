@@ -84,9 +84,8 @@
             docker
             docker-compose
             colima
+            devenv
 
-            # ai tools
-            kiro-cli
           ];
 
           #--------------------------------------------------------------------
@@ -100,13 +99,6 @@
             interval = { Hour = 3; Minute = 15; };
             options = "--delete-older-than 7d";
           };
-
-          # Allow only specific unfree packages (e.g., kiro-cli)
-          nixpkgs.config.allowUnfreePredicate =
-            pkg:
-            builtins.elem (lib.getName pkg) [
-              "kiro-cli"
-            ];
 
           # Pin iTerm2's default profile to the Catppuccin Mocha Dynamic Profile
           # (Guid matches ./iterm2/catppuccin-mocha.json). Apply while iTerm2 is

@@ -143,7 +143,7 @@
             casks = [
               # utils
               "rectangle"
-              "cleanshot"
+              "bryan/custom/cleanshot"
               # "outerbase-studio" # not always needed
 
               # browsers
@@ -234,8 +234,17 @@
           # Tap Sync - Keeps your Homebrew config in sync with nix-homebrew
           #--------------------------------------------------------------------
           (
-            { config, ... }:
+            { config, pkgs, ... }:
             {
+              nix-homebrew.taps."bryan/homebrew-custom" = pkgs.stdenvNoCC.mkDerivation {
+                name = "homebrew-custom";
+                src = ./taps/homebrew-custom;
+                installPhase = ''
+                  mkdir -p "$out"
+                  cp -RH . "$out"
+                '';
+              };
+
               homebrew.taps = builtins.attrNames config.nix-homebrew.taps;
             }
           )

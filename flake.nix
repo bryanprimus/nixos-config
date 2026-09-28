@@ -166,7 +166,7 @@
               # ai tools
               "zed"
               "grok-build"
-              "codex-app"
+              "chatgpt"
               "antigravity"
               "antigravity-cli"
               "claude"

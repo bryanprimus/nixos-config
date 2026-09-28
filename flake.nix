@@ -203,6 +203,7 @@
             # "zap" = uninstall anything not listed above
             # This keeps your system clean but be careful!
             onActivation = {
+              upgrade = true;
               cleanup = "zap";
             };
           };
